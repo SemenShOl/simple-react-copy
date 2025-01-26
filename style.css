@@ -1,0 +1,26 @@
+#root {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.app {
+    max-width: 500px;
+}
+.clock {
+    border: 2px solid teal;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.lotsList {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.lot {
+    border: 2px solid teal;
+    padding: 5px;
+    border-radius: 4px;
+}
