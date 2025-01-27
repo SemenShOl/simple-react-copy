@@ -26,77 +26,6 @@ let state = {
     lots: null,
 }
 
-function App({ state }) {
-    const app = document.createElement('div')
-    app.className = 'app'
-
-    app.append(Header())
-    app.append(
-        Clock({
-            time: state.time,
-        })
-    )
-    app.append(Lots({ lots: state.lots }))
-    return app
-}
-
-function Header() {
-    const header = document.createElement('header')
-    header.className = 'header'
-    header.append(Logo())
-
-    return header
-}
-
-function Logo() {
-    const logo = document.createElement('img')
-    logo.src = 'logo.jpg'
-    logo.className = 'logo'
-    logo.setAttribute('width', 200)
-    logo.setAttribute('height', 200)
-    return logo
-}
-
-function Clock(props) {
-    const clock = document.createElement('div')
-    clock.className = 'clock'
-    clock.textContent = props.time.toLocaleTimeString()
-    return clock
-}
-function Lots({ lots }) {
-    if (!lots) {
-        return 'Loading...'
-    }
-    const lotsList = document.createElement('ul')
-    lotsList.className = 'lotsList'
-
-    lots.forEach((lot) => {
-        const lotElement = Lot({ lot })
-        lotsList.append(lotElement)
-    })
-    return lotsList
-}
-
-function Lot({ lot }) {
-    const lotElement = document.createElement('li')
-    lotElement.className = 'lot'
-
-    const lotName = document.createElement('h2')
-    lotName.textContent = lot.name
-
-    const lotPrice = document.createElement('h3')
-    lotPrice.textContent = lot.price
-
-    const lotDescription = document.createElement('p')
-    lotDescription.textContent = lot.description
-
-    lotElement.append(lotName)
-    lotElement.append(lotPrice)
-    lotElement.append(lotDescription)
-
-    return lotElement
-}
-
 renderView(state)
 
 setInterval(() => {
@@ -104,7 +33,6 @@ setInterval(() => {
         ...state,
         time: new Date(),
     }
-    // debugger
     renderView(state)
 }, 1000)
 
@@ -113,25 +41,142 @@ api.get('/lots').then((data) => {
         ...state,
         lots: data,
     }
-    debugger
     renderView(state)
 })
+
+function App({ state }) {
+    return {
+        type: 'div',
+        props: {
+            className: 'app',
+            children: [
+                {
+                    type: Header,
+                },
+                {
+                    type: Clock,
+                    props: { time: state.time },
+                },
+                {
+                    type: Lots,
+                    props: { lots: state.lots },
+                },
+            ],
+        },
+    }
+}
+
+function Header() {
+    return {
+        type: 'header',
+        props: {
+            className: 'header',
+            children: [
+                {
+                    type: Logo,
+                },
+            ],
+        },
+    }
+}
+
+function Logo() {
+    return {
+        type: 'img',
+        props: {
+            src: 'logo.jpg',
+            className: 'logo',
+            width: '200px',
+            height: '200px',
+        },
+    }
+}
+
+function Clock(props) {
+    return {
+        type: 'div',
+        props: {
+            className: 'clock',
+            children: [props.time.toLocaleTimeString()],
+        },
+    }
+}
+function Lots({ lots }) {
+    if (!lots) {
+        return 'Loading...'
+    }
+
+    return {
+        type: 'ul',
+        props: {
+            className: 'lotsList',
+            children: lots.map((lot) => ({
+                type: Lot,
+                props: { lot },
+            })),
+        },
+    }
+}
+
+function Lot({ lot }) {
+    return {
+        type: 'li',
+        props: {
+            className: 'lot',
+            children: [
+                {
+                    type: 'h2',
+                    props: {
+                        children: [lot.name],
+                    },
+                },
+                {
+                    type: 'h3',
+                    props: {
+                        children: [lot.price],
+                    },
+                },
+                {
+                    type: 'p',
+                    props: {
+                        children: [lot.description],
+                    },
+                },
+            ],
+        },
+    }
+}
 
 function renderView(state) {
     render(document.getElementById('root'), App({ state }))
 }
 function render(domRoot, virtualDom) {
-    const virtualDomRoot = document.createElement(domRoot.tagName)
-    virtualDomRoot.id = domRoot.id
-    virtualDomRoot.append(virtualDom)
-
-    // domRoot.innerHTML = ''
-    // domRoot.append(virtualDom)
+    const virtualDomRoot = {
+        type: domRoot.tagName.toLowerCase(),
+        props: {
+            id: domRoot.id,
+            children: [virtualDom],
+        },
+    }
     sync(domRoot, virtualDomRoot)
 }
 
+function evaluate(virtualElement) {
+    if (typeof virtualElement.type === 'function') {
+        return virtualElement.type(virtualElement.props)
+    } else if (typeof virtualElement.type === 'string') {
+        if (virtualElement.props.children) {
+            virtualElement.props.children = virtualElement.props.children.map(
+                (child) => {
+                    return evaluate(child)
+                }
+            )
+        }
+    } else {
+        return virtualElement
+    }
+}
 function sync(realNode, virtualNode) {
-    // const realNode = document.createElement('div')
     if (virtualNode.attributes) {
         Array.from(virtualNode.attributes).forEach((attr) => {
             realNode[attr.name] = attr.value
