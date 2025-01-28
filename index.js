@@ -20,6 +20,7 @@ const api = {
         }
     },
 }
+let count = 0
 
 let state = {
     time: new Date(),
@@ -43,6 +44,8 @@ api.get('/lots').then((data) => {
     }
     renderView(state)
 })
+
+//-----------------------------------------
 
 function App({ state }) {
     return {
@@ -86,8 +89,8 @@ function Logo() {
         props: {
             src: 'logo.jpg',
             className: 'logo',
-            width: '200px',
-            height: '200px',
+            width: '200',
+            height: '200',
         },
     }
 }
@@ -97,7 +100,7 @@ function Clock(props) {
         type: 'div',
         props: {
             className: 'clock',
-            children: [props.time.toLocaleTimeString()],
+            children: props.time.toLocaleTimeString(),
         },
     }
 }
@@ -127,19 +130,19 @@ function Lot({ lot }) {
                 {
                     type: 'h2',
                     props: {
-                        children: [lot.name],
+                        children: lot.name,
                     },
                 },
                 {
                     type: 'h3',
                     props: {
-                        children: [lot.price],
+                        children: lot.price,
                     },
                 },
                 {
                     type: 'p',
                     props: {
-                        children: [lot.description],
+                        children: lot.description,
                     },
                 },
             ],
@@ -151,7 +154,9 @@ function renderView(state) {
     render(document.getElementById('root'), App({ state }))
 }
 function render(domRoot, virtualDom) {
+    // debugger
     const evaluatedVirtualDom = evaluate(virtualDom)
+    console.log(evaluatedVirtualDom)
     const virtualDomRoot = {
         type: domRoot.tagName.toLowerCase(),
         props: {
@@ -173,25 +178,35 @@ function evaluate(virtualNode) {
     if (nodeChildren) {
         virtualNode.props.children = Array.isArray(nodeChildren)
             ? nodeChildren.map(evaluate)
-            : evaluate(nodeChildren)
+            : [evaluate(nodeChildren)]
     }
     return virtualNode
 }
 
 function sync(realNode, virtualNode) {
-    if (virtualNode.attributes) {
-        Array.from(virtualNode.attributes).forEach((attr) => {
-            realNode[attr.name] = attr.value
+    // if()
+    //Синхронизация аттрибутов
+    if (virtualNode.props) {
+        Object.entries(virtualNode.props).forEach(([name, value]) => {
+            if (
+                name !== 'children' &&
+                name !== 'key' &&
+                realNode[name] !== value
+            )
+                realNode[name] = value
         })
     }
-
-    if (virtualNode.nodeValue !== realNode.nodeValue) {
-        realNode.nodeValue = virtualNode.nodeValue
-        return
+    if (virtualNode.key) realNode.dataset.key = virtualNode.key
+    if (isVirtualNodeText(virtualNode) && virtualNode != realNode.nodeValue) {
+        realNode.nodeValue = virtualNode
+        return realNode
     }
+
     //ADD
     const realChildren = realNode.childNodes
-    const virtualChildren = virtualNode.childNodes
+    const virtualChildren =
+        (virtualNode.props && virtualNode.props.children) || []
+
     for (
         let i = 0;
         i < Math.max(virtualChildren.length, realChildren.length);
@@ -206,28 +221,40 @@ function sync(realNode, virtualNode) {
             sync(realChild, virtualChild)
             realNode.append(realChild)
         }
-        //REPLACE
-        else if (realChild.tagName !== virtualChild.tagName) {
-            realChild = createNodeByVirtualNode(virtualChild)
-            sync(realChild, virtualChild)
-            realNode.remove(virtualChild)
-            realNode.append(realChild)
-        }
-
-        //UPDATE
-        else if (realChild.tagName === virtualChild.tagName) {
-            sync(realChild, virtualChild)
-        }
 
         //REMOVE
         else if (realChild && !virtualChild) {
             realNode.remove(realChild)
         }
+
+        //REPLACE
+        else if (
+            !virtualChild.type ||
+            realChild.tagName !== virtualChild.type.toUpperCase()
+        ) {
+            debugger
+            const newChild = createNodeByVirtualNode(virtualChild)
+            sync(newChild, virtualChild)
+            realChild.replaceWith(newChild)
+        }
+
+        //UPDATE
+        else if (realChild.tagName.toLowerCase() === virtualChild.type) {
+            sync(realChild, virtualChild)
+        }
     }
 }
 
 function createNodeByVirtualNode(virtualNode) {
-    return virtualNode.nodeType !== Node.TEXT_NODE
-        ? document.createElement(virtualNode.tagName)
-        : document.createTextNode(virtualNode.nodeValue)
+    // return virtualNode.nodeType !== Node.TEXT_NODE
+    // ? document.createElement(virtualNode.tagName)
+    // : document.createTextNode(virtualNode.nodeValue)
+    return isVirtualNodeText(virtualNode)
+        ? document.createTextNode(virtualNode)
+        : document.createElement(virtualNode.type)
+}
+
+function isVirtualNodeText(virtualNode) {
+    const result = !Object.hasOwn(virtualNode, 'type')
+    return result
 }
