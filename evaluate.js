@@ -13,20 +13,20 @@ let state = {
         },
     ],
 }
-function evaluate(virtualElement) {
-    debugger
-    if (typeof virtualElement.type === 'function') {
-        virtualElement = virtualElement.type(virtualElement.props)
+function evaluate(virtualNode) {
+    //виртуальная нода - другой компонент
+    if (typeof virtualNode.type === 'function') {
+        virtualNode = virtualNode.type(virtualNode.props)
     }
-    if (virtualElement.props && virtualElement.props.children) {
-        virtualElement.props.children = virtualElement.props.children.map(
-            (child) => {
-                const result = evaluate(child)
-                return result
-            }
-        )
+
+    //Преобразование children ноды
+    const nodeChildren = virtualNode.props && virtualNode.props.children
+    if (nodeChildren) {
+        virtualNode.props.children = Array.isArray(nodeChildren)
+            ? nodeChildren.map(evaluate)
+            : evaluate(nodeChildren)
     }
-    return virtualElement
+    return virtualNode
 }
 
 function App({ state }) {
@@ -76,7 +76,7 @@ function Clock(props) {
         type: 'div',
         props: {
             className: 'clock',
-            children: [props.time.toLocaleTimeString()],
+            children: props.time.toLocaleTimeString(),
         },
     }
 }
@@ -97,7 +97,7 @@ function Paragraph({ text }) {
     return {
         type: 'p',
         props: {
-            children: [text],
+            children: text,
         },
     }
 }
@@ -128,19 +128,19 @@ function Lot({ lot }) {
                 {
                     type: 'h2',
                     props: {
-                        children: [lot.name],
+                        children: lot.name,
                     },
                 },
                 {
                     type: 'h3',
                     props: {
-                        children: [lot.price],
+                        children: lot.price,
                     },
                 },
                 {
                     type: 'p',
                     props: {
-                        children: [lot.description],
+                        children: lot.description,
                     },
                 },
             ],

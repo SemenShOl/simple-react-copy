@@ -151,31 +151,33 @@ function renderView(state) {
     render(document.getElementById('root'), App({ state }))
 }
 function render(domRoot, virtualDom) {
+    const evaluatedVirtualDom = evaluate(virtualDom)
     const virtualDomRoot = {
         type: domRoot.tagName.toLowerCase(),
         props: {
             id: domRoot.id,
-            children: [virtualDom],
+            children: [evaluatedVirtualDom],
         },
     }
     sync(domRoot, virtualDomRoot)
 }
 
-function evaluate(virtualElement) {
-    if (typeof virtualElement.type === 'function') {
-        return virtualElement.type(virtualElement.props)
-    } else if (typeof virtualElement.type === 'string') {
-        if (virtualElement.props.children) {
-            virtualElement.props.children = virtualElement.props.children.map(
-                (child) => {
-                    return evaluate(child)
-                }
-            )
-        }
-    } else {
-        return virtualElement
+function evaluate(virtualNode) {
+    //виртуальная нода - другой компонент
+    if (typeof virtualNode.type === 'function') {
+        virtualNode = virtualNode.type(virtualNode.props)
     }
+
+    //Преобразование children ноды
+    const nodeChildren = virtualNode.props && virtualNode.props.children
+    if (nodeChildren) {
+        virtualNode.props.children = Array.isArray(nodeChildren)
+            ? nodeChildren.map(evaluate)
+            : evaluate(nodeChildren)
+    }
+    return virtualNode
 }
+
 function sync(realNode, virtualNode) {
     if (virtualNode.attributes) {
         Array.from(virtualNode.attributes).forEach((attr) => {
