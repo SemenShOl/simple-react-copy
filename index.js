@@ -3,37 +3,65 @@ import { render } from './render.js'
 import { VDom } from './vdom.js'
 
 /** @jsx VDom.createElement */
-
-let state = {
+class Store {
+    constructor(initialState) {
+        this.state = initialState
+        this.listeners = []
+        renderView(this.state)
+    }
+    getState() {
+        return this.state
+    }
+    subscribe(callback) {
+        this.listeners.push(callback)
+    }
+    changeState(diff) {
+        if (typeof diff === 'function') {
+            this.state = {
+                ...this.state,
+                ...diff(this.state),
+            }
+        } else {
+            this.state = {
+                ...this.state,
+                ...diff,
+            }
+        }
+        // renderView(this.state)
+        this.listeners.forEach((callback) => callback())
+    }
+}
+const initialState = {
     time: new Date(),
     lots: [],
+    counter: 10,
 }
-renderView(state)
+const store = new Store(initialState)
+store.subscribe(() => renderView(store.getState()))
+store.subscribe(() => console.log('Rerender'))
 
 api.get('/lots').then((data) => {
-    state = {
-        ...state,
-        lots: data,
-    }
-    renderView(state)
+    store.changeState({ lots: data })
+    // renderView(store.getState())
 })
 
 setInterval(() => {
-    state = {
-        ...state,
-        time: new Date(),
-    }
-    renderView(state)
+    store.changeState({ time: new Date() })
+    store.changeState((state) => ({
+        counter: state.counter + 2,
+    }))
+
+    // renderView(store.getState())
 }, 1000)
 //-----------------------------------------
 
 function App({ state }) {
-    // return
     return (
         <div className="app">
             <Header />
             <Clock time={state.time} />
             <Lots lots={state.lots} />
+            <h1>{state.counter}</h1>
         </div>
     )
 }
@@ -77,6 +105,5 @@ function Lot({ lot }) {
 }
 
 export function renderView(state) {
-    // render(document.getElementById('root'), App({ state }))
     render(document.getElementById('root'), <App state={state} />)
 }
