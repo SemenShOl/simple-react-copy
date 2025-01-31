@@ -6,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="style.css">
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.24.0/babel.js"></script> -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- <script src="https://unpkg.com/@babel/standalone/6.24.0/babel.js"></script> -->
 </head>
 
 <body>
@@ -17,31 +15,8 @@
 
     <script src="api.js" type="module"></script>
     <script src="index.js" type="text/jsx" data-type="module"></script>
-    <!-- <script src="transpiler.js"></script> -->
-    <!-- <script>
-        const scripts = document.querySelectorAll('script[text="shishkin"]')
-        console.log('scripts:', scripts)
 
-        function convertCodeToBrowser(code) {
-            return Babel.transform(code, {
-                presets: ['stage-2'],
-            }).code
-        }
-
-        scripts.forEach(async (script) => {
-            fetch(script.src)
-                .then((response) => {
-                    return response.text()
-                })
-                .then((code) => {
-                    const convertedCode = convertCodeToBrowser(code)
-                    const scriptElement = document.createElement('script')
-                    scriptElement.textContent = convertedCode
-                    document.body.append(scriptElement)
-                })
-        })
-
-    </script> -->
+    </script>
 </body>
 
 </html>

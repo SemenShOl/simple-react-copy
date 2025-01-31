@@ -1,5 +1,6 @@
 export function evaluate(virtualNode) {
     //виртуальная нода - другой компонент
+    // debugger
     if (typeof virtualNode.type === 'function') {
         virtualNode = virtualNode.type(virtualNode.props)
     }
@@ -11,6 +12,7 @@ export function evaluate(virtualNode) {
             ? nodeChildren.map(evaluate)
             : evaluate(nodeChildren)
     }
+    debugger
     return virtualNode
 }
 

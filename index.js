@@ -2,10 +2,13 @@ import { api } from './api.js'
 import { render } from './render.js'
 import { VDom } from './vdom.js'
 
+/** @jsx VDom.createElement */
+
 let state = {
     time: new Date(),
-    lots: null,
+    lots: [],
 }
+renderView(state)
 
 api.get('/lots').then((data) => {
     state = {
@@ -25,71 +28,55 @@ setInterval(() => {
 //-----------------------------------------
 
 function App({ state }) {
-    return VDom.createElement(
-        'div',
-        { className: 'app' },
-        VDom.createElement(Header, {}),
-        VDom.createElement(Clock, { time: state.time }),
-        VDom.createElement(Lots, { lots: state.lots })
+    // return
+    return (
+        <div className="app">
+            <Header />
+            <Clock time={state.time} />
+            <Lots lots={state.lots} />
+        </div>
     )
 }
 
 function Header() {
-    return VDom.createElement(
-        'header',
-        { className: 'header' },
-        VDom.createElement(Logo, {})
+    return (
+        <header className="header">
+            <Logo />
+        </header>
     )
 }
 
 function Logo() {
-    return VDom.createElement('img', {
-        src: 'logo.jpg',
-        className: 'logo',
-        width: '200',
-        height: '200',
-    })
+    return <img src="logo.jpg" className="logo" width="200" height="200" />
 }
 
 function Clock(props) {
-    return VDom.createElement(
-        'div',
-        {
-            className: 'clock',
-        },
-        props.time.toLocaleTimeString()
-    )
+    return <div className="clock">{props.time.toLocaleTimeString()}</div>
 }
 function Lots({ lots }) {
     if (!lots) {
         return 'Loading...'
     }
-
-    return VDom.createElement(
-        'ul',
-        {
-            className: 'lotsList',
-        },
-        ...lots.map((lot) =>
-            VDom.createElement(Lot, {
-                lot,
-            })
-        )
+    return (
+        <ul className="lotsList">
+            {lots.map((lot) => (
+                <Lot lot={lot} key={lot.id} />
+            ))}
+        </ul>
     )
 }
 
 function Lot({ lot }) {
-    return VDom.createElement(
-        'li',
-        {
-            className: 'lot',
-        },
-        VDom.createElement('h2', {}, lot.name),
-        VDom.createElement('h3', {}, lot.price),
-        VDom.createElement('p', {}, lot.description)
+    return (
+        <li>
+            <h2>{lot.name}</h2>
+            <h3>{lot.price}</h3>
+            <p>{lot.description}</p>
+        </li>
     )
 }
 
 export function renderView(state) {
-    render(document.getElementById('root'), App({ state }))
+    // render(document.getElementById('root'), App({ state }))
+    render(document.getElementById('root'), <App state={state} />)
 }

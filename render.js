@@ -1,10 +1,10 @@
 import { sync, evaluate } from './sync.js'
 export function render(domRoot, virtualDom) {
     // debugger
-    // console.log('virtualDom:', virtualDom)
+    console.log('virtualDom:', virtualDom)
 
     const evaluatedVirtualDom = evaluate(virtualDom)
-    // console.log('evaluatedVirtualDom:', evaluatedVirtualDom)
+    console.log('evaluatedVirtualDom:', evaluatedVirtualDom)
     const virtualDomRoot = {
         type: domRoot.tagName.toLowerCase(),
         props: {
