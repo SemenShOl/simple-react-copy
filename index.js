@@ -14,20 +14,16 @@ class Store {
     }
     subscribe(callback) {
         this.listeners.push(callback)
-    }
-    changeState(diff) {
-        if (typeof diff === 'function') {
-            this.state = {
-                ...this.state,
-                ...diff(this.state),
-            }
-        } else {
-            this.state = {
-                ...this.state,
-                ...diff,
-            }
+        return () => {
+            const index = this.listeners.length - 1
+            this.listeners.splice(index, 1)
         }
-        // renderView(this.state)
+    }
+    setState(state) {
+        this.state = {
+            ...this.state,
+            ...(typeof state === 'function' ? state(this.state) : state),
+        }
         this.listeners.forEach((callback) => callback())
     }
 }
@@ -38,20 +34,19 @@ const initialState = {
 }
 const store = new Store(initialState)
 store.subscribe(() => renderView(store.getState()))
-store.subscribe(() => console.log('Rerender'))
+// store.subscribe(() => console.log('Rerender'))
 
 api.get('/lots').then((data) => {
-    store.changeState({ lots: data })
+    store.setState((state) => ({ ...state, lots: data }))
     // renderView(store.getState())
 })
 
 setInterval(() => {
-    store.changeState({ time: new Date() })
-    store.changeState((state) => ({
+    store.setState((state) => ({ ...state, time: new Date() }))
+    store.setState((state) => ({
+        ...state,
         counter: state.counter + 2,
     }))
-
-    // renderView(store.getState())
 }, 1000)
 //-----------------------------------------
 
