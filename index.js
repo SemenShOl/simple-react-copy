@@ -7,6 +7,7 @@ import { VDom } from './vdom.js'
 const SET_TIME = 'SET_TIME'
 const SET_LOTS = 'SET_LOTS'
 const SET_COUNTER = 'SET_COUNTER'
+const SET_LOT_STATE = 'SET_LOT_STATE'
 // const initialState = {
 //     time: new Date(),
 // }
@@ -15,9 +16,31 @@ const initialState = {
         time: new Date(),
     },
     auction: {
-        lots: [],
+        lots: [
+            // {
+            //     id: 1,
+            //     price: 16,
+            //     name: 'Apple',
+            //     description: 'Good apple',
+            //     isActive: false,
+            // },
+            // {
+            //     id: 2,
+            //     price: 32,
+            //     name: 'Orange',
+            //     description: 'Good Orange',
+            //     isActive: true,
+            // },
+        ],
         counter: 10,
     },
+}
+const setLotStatus = (status, id) => {
+    // debugger
+    store.dispatch({
+        type: SET_LOT_STATE,
+        payload: { status, id },
+    })
 }
 
 const clockReducer = (state, action) => {
@@ -33,6 +56,16 @@ const auctionReducer = (state, action) => {
     switch (action.type) {
         case SET_LOTS:
             return { ...state, lots: action.payload.lots }
+        case SET_LOT_STATE:
+            debugger
+            return {
+                ...state,
+                lots: state.lots.map((lot) =>
+                    lot.id === action.payload.id
+                        ? { ...lot, isActive: action.payload.status }
+                        : lot
+                ),
+            }
         case SET_COUNTER:
             return { ...state, counter: action.payload.add + state.counter }
         default:
@@ -41,7 +74,7 @@ const auctionReducer = (state, action) => {
 }
 
 const combineReducer = (state = initialState, action) => {
-    debugger
+    // debugger
     return {
         clock: clockReducer(state.clock, action),
         auction: auctionReducer(state.auction, action),
@@ -53,7 +86,7 @@ class Store {
         this.state = appReducer(initialState, {})
 
         this.listeners = []
-        renderView(this.state)
+        renderView(this)
     }
     getState() {
         return this.state
@@ -79,8 +112,7 @@ class Store {
 
 //-----------------------------------------
 const store = new Store(combineReducer)
-
-store.subscribe(() => renderView(store.getState()))
+store.subscribe(() => renderView(store))
 
 api.get('/lots').then((data) => {
     store.dispatch({ type: SET_LOTS, payload: { lots: data } })
@@ -92,13 +124,12 @@ setInterval(() => {
 }, 1000)
 //-----------------------------------------
 
-function App({ state }) {
-    debugger
+function App({ state, setLotStatus }) {
     return (
         <div className="app">
             <Header />
             <Clock time={state.clock.time} />
-            <Lots lots={state.auction.lots} />
+            <Lots setLotStatus={setLotStatus} lots={state.auction.lots} />
             <h1>{state.auction.counter}</h1>
         </div>
     )
@@ -119,29 +150,50 @@ function Logo() {
 function Clock(props) {
     return <div className="clock">{props.time.toLocaleTimeString()}</div>
 }
-function Lots({ lots }) {
+function Lots({ lots, setLotStatus }) {
     if (!lots) {
         return 'Loading...'
     }
     return (
         <ul className="lotsList">
             {lots.map((lot) => (
-                <Lot lot={lot} key={lot.id} />
+                <Lot setLotStatus={setLotStatus} lot={lot} key={lot.id} />
             ))}
         </ul>
     )
 }
 
-function Lot({ lot }) {
+function Lot({ lot, setLotStatus }) {
+    const lotClass = 'lot ' + (lot.isActive ? 'active' : '')
+    debugger
     return (
-        <li>
+        <li className={lotClass}>
             <h2>{lot.name}</h2>
             <h3>{lot.price}</h3>
             <p>{lot.description}</p>
+            <ActionButton
+                isActive={lot.isActive}
+                onTurnOff={() => setLotStatus(false, lot.id)}
+                onTurnOn={() => setLotStatus(true, lot.id)}
+                // onTurnOff={() => console.log('onTurnOff')}
+                // onTurnOn={() => console.log('onTurnOn')}
+            />
         </li>
     )
 }
 
-export function renderView(state) {
-    render(document.getElementById('root'), <App state={state} />)
+function ActionButton({ isActive, onTurnOff, onTurnOn }) {
+    return isActive ? (
+        <button onClick={onTurnOff}>Отключить</button>
+    ) : (
+        <button onClick={onTurnOn}>Включить</button>
+    )
+}
+
+export function renderView(store) {
+    const state = store.getState()
+    render(
+        document.getElementById('root'),
+        <App state={state} setLotStatus={setLotStatus} />
+    )
 }

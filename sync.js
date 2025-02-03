@@ -15,6 +15,7 @@ export function evaluate(virtualNode) {
 }
 
 export function sync(realNode, virtualNode) {
+    // debugger
     //Синхронизация аттрибутов
     if (virtualNode.props) {
         Object.entries(virtualNode.props).forEach(([name, value]) => {
@@ -27,6 +28,12 @@ export function sync(realNode, virtualNode) {
         })
     }
     if (virtualNode.key) realNode.dataset.key = virtualNode.key
+
+    if (virtualNode?.props?.onClick && !realNode.onclick) {
+        realNode.addEventListener('click', () => {
+            virtualNode.props.onClick()
+        })
+    }
     if (isVirtualNodeText(virtualNode) && virtualNode != realNode.nodeValue) {
         realNode.nodeValue = virtualNode
         return realNode

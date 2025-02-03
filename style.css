@@ -16,11 +16,18 @@
 .lotsList {
     padding: 0;
     display: flex;
-    flex-direction: column;
+    /* flex-direction: column; */
     gap: 6px;
 }
 .lot {
+    width: 200px;
     border: 2px solid teal;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.lot.active {
+    border: 4px solid rgb(233, 34, 47);
     padding: 5px;
     border-radius: 4px;
 }
