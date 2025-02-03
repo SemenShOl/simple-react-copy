@@ -3,9 +3,25 @@ import { render } from './render.js'
 import { VDom } from './vdom.js'
 
 /** @jsx VDom.createElement */
+
+// const appReducer = (state, action)
+
+const appReducer = (state, action) => {
+    switch (action.type) {
+        case 'SET_TIME':
+            return { ...state, time: action.payload.time }
+        case 'SET_LOTS':
+            return { ...state, lots: action.payload.lots }
+        case 'SET_COUNTER':
+            return { ...state, counter: action.payload.add + state.counter }
+        default:
+            return state
+    }
+}
 class Store {
-    constructor(initialState) {
+    constructor(initialState, appReducer) {
         this.state = initialState
+        this.appReducer = appReducer
         this.listeners = []
         renderView(this.state)
     }
@@ -18,6 +34,10 @@ class Store {
             const index = this.listeners.length - 1
             this.listeners.splice(index, 1)
         }
+    }
+    dispatch(action) {
+        this.setState((state) => this.appReducer(state, action))
+        // this.listeners.forEach((callback) => callback())
     }
     setState(state) {
         this.state = {
@@ -32,21 +52,19 @@ const initialState = {
     lots: [],
     counter: 10,
 }
-const store = new Store(initialState)
+
+//-----------------------------------------
+const store = new Store(initialState, appReducer)
+
 store.subscribe(() => renderView(store.getState()))
-// store.subscribe(() => console.log('Rerender'))
 
 api.get('/lots').then((data) => {
-    store.setState((state) => ({ ...state, lots: data }))
-    // renderView(store.getState())
+    store.dispatch({ type: 'SET_LOTS', payload: { lots: data } })
 })
 
 setInterval(() => {
-    store.setState((state) => ({ ...state, time: new Date() }))
-    store.setState((state) => ({
-        ...state,
-        counter: state.counter + 2,
-    }))
+    store.dispatch({ type: 'SET_TIME', payload: { time: new Date() } })
+    store.dispatch({ type: 'SET_COUNTER', payload: { add: 2 } })
 }, 1000)
 //-----------------------------------------
 
