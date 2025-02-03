@@ -4,24 +4,54 @@ import { VDom } from './vdom.js'
 
 /** @jsx VDom.createElement */
 
-// const appReducer = (state, action)
+const SET_TIME = 'SET_TIME'
+const SET_LOTS = 'SET_LOTS'
+const SET_COUNTER = 'SET_COUNTER'
+// const initialState = {
+//     time: new Date(),
+// }
+const initialState = {
+    clock: {
+        time: new Date(),
+    },
+    auction: {
+        lots: [],
+        counter: 10,
+    },
+}
 
-const appReducer = (state, action) => {
+const clockReducer = (state, action) => {
     switch (action.type) {
-        case 'SET_TIME':
+        case SET_TIME:
             return { ...state, time: action.payload.time }
-        case 'SET_LOTS':
+        default:
+            return state
+    }
+}
+
+const auctionReducer = (state, action) => {
+    switch (action.type) {
+        case SET_LOTS:
             return { ...state, lots: action.payload.lots }
-        case 'SET_COUNTER':
+        case SET_COUNTER:
             return { ...state, counter: action.payload.add + state.counter }
         default:
             return state
     }
 }
+
+const combineReducer = (state = initialState, action) => {
+    debugger
+    return {
+        clock: clockReducer(state.clock, action),
+        auction: auctionReducer(state.auction, action),
+    }
+}
 class Store {
-    constructor(initialState, appReducer) {
-        this.state = initialState
+    constructor(appReducer, initialState) {
         this.appReducer = appReducer
+        this.state = appReducer(initialState, {})
+
         this.listeners = []
         renderView(this.state)
     }
@@ -37,7 +67,6 @@ class Store {
     }
     dispatch(action) {
         this.setState((state) => this.appReducer(state, action))
-        // this.listeners.forEach((callback) => callback())
     }
     setState(state) {
         this.state = {
@@ -47,34 +76,30 @@ class Store {
         this.listeners.forEach((callback) => callback())
     }
 }
-const initialState = {
-    time: new Date(),
-    lots: [],
-    counter: 10,
-}
 
 //-----------------------------------------
-const store = new Store(initialState, appReducer)
+const store = new Store(combineReducer)
 
 store.subscribe(() => renderView(store.getState()))
 
 api.get('/lots').then((data) => {
-    store.dispatch({ type: 'SET_LOTS', payload: { lots: data } })
+    store.dispatch({ type: SET_LOTS, payload: { lots: data } })
 })
 
 setInterval(() => {
-    store.dispatch({ type: 'SET_TIME', payload: { time: new Date() } })
-    store.dispatch({ type: 'SET_COUNTER', payload: { add: 2 } })
+    store.dispatch({ type: SET_TIME, payload: { time: new Date() } })
+    store.dispatch({ type: SET_COUNTER, payload: { add: 2 } })
 }, 1000)
 //-----------------------------------------
 
 function App({ state }) {
+    debugger
     return (
         <div className="app">
             <Header />
-            <Clock time={state.time} />
-            <Lots lots={state.lots} />
-            <h1>{state.counter}</h1>
+            <Clock time={state.clock.time} />
+            <Lots lots={state.auction.lots} />
+            <h1>{state.auction.counter}</h1>
         </div>
     )
 }
