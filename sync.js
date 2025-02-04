@@ -1,9 +1,11 @@
 /** @jsx VDom.createElement */
 
 export function evaluate(virtualNode) {
-    //debugger
     //виртуальная нода - другой компонент
-    if (typeof virtualNode.type === 'function') {
+    // if (typeof virtualNode.type === 'function') {
+    //     virtualNode = virtualNode.type(virtualNode.props)
+    // }
+    while (typeof virtualNode.type === 'function') {
         virtualNode = virtualNode.type(virtualNode.props)
     }
 
