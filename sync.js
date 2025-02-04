@@ -1,4 +1,7 @@
+/** @jsx VDom.createElement */
+
 export function evaluate(virtualNode) {
+    //debugger
     //виртуальная нода - другой компонент
     if (typeof virtualNode.type === 'function') {
         virtualNode = virtualNode.type(virtualNode.props)
@@ -15,7 +18,7 @@ export function evaluate(virtualNode) {
 }
 
 export function sync(realNode, virtualNode) {
-    // debugger
+    // //debugger
     //Синхронизация аттрибутов
     if (virtualNode.props) {
         Object.entries(virtualNode.props).forEach(([name, value]) => {
@@ -69,7 +72,7 @@ export function sync(realNode, virtualNode) {
             !virtualChild.type ||
             realChild.tagName !== virtualChild.type.toUpperCase()
         ) {
-            // debugger
+            // //debugger
             const newChild = createNodeByVirtualNode(virtualChild)
             sync(newChild, virtualChild)
             realChild.replaceWith(newChild)

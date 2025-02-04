@@ -2,9 +2,13 @@ import { api } from './api.js'
 import { render } from './render.js'
 import { VDom } from './vdom.js'
 import { Store } from './redux.js'
+import { createContext, useContext } from './contex.js'
 
 /** @jsx VDom.createElement */
+
+//------------------------
 export function renderView(store) {
+    // //debugger
     const state = store.getState()
     const setLotStatus = (status, id) => {
         store.dispatch({
@@ -95,31 +99,49 @@ const combineReducer = (state = initialState, action) => {
 }
 
 //-----------------------------------------
+const MyContext = createContext()
+const MyContext2 = createContext()
 const store = new Store(combineReducer)
 store.subscribe(() => renderView(store))
+renderView(store)
+// api.get('/lots').then((data) => {
+//     store.dispatch({ type: SET_LOTS, payload: { lots: data } })
+// })
 
-api.get('/lots').then((data) => {
-    store.dispatch({ type: SET_LOTS, payload: { lots: data } })
-})
-
-setInterval(() => {
-    store.dispatch({ type: SET_TIME, payload: { time: new Date() } })
-    store.dispatch({ type: SET_COUNTER, payload: { add: 2 } })
-}, 1000)
+// setInterval(() => {
+//     store.dispatch({ type: SET_TIME, payload: { time: new Date() } })
+//     store.dispatch({ type: SET_COUNTER, payload: { add: 2 } })
+// }, 1000)
 //-----------------------------------------
-
 function App({ state, setLotStatus, setActiveRoute }) {
     return (
         <div className="app">
-            <Router
+            {/* <Header /> */}
+            <MyContext.Provider value={{ name: 'Semyon' }}>
+                <Header />
+            </MyContext.Provider>
+            {/* <Router
                 activeRoute={state.router.activeRoute}
                 setActiveRoute={setActiveRoute}
-            />
-            {/* <Header />
-            <Clock time={state.clock.time} />
+            /> */}
+            {/* 
+            
             <Lots setLotStatus={setLotStatus} lots={state.auction.lots} />
             <h1>{state.auction.counter}</h1> */}
+            <MyContext2.Provider value={{ time: 10 }}>
+                <Clock time={state.clock.time} />
+            </MyContext2.Provider>
         </div>
+    )
+}
+function Header() {
+    const { name } = useContext(MyContext)
+    // debugger
+    return (
+        <header className="header">
+            <Logo />
+            <h2>{name}</h2>
+        </header>
     )
 }
 
@@ -177,20 +199,16 @@ function Route({ children, path, activeRoute }) {
     }
     return <div>{children}</div>
 }
-function Header() {
-    return (
-        <header className="header">
-            <Logo />
-        </header>
-    )
-}
 
 function Logo() {
     return <img src="logo.jpg" className="logo" width="200" height="200" />
 }
 
 function Clock(props) {
-    return <div className="clock">{props.time.toLocaleTimeString()}</div>
+    const { time } = useContext(MyContext2)
+    // return <div className="clock">{props.time.toLocaleTimeString()}</div>
+
+    return <h3>{time}</h3>
 }
 function Lots({ lots, setLotStatus }) {
     if (!lots) {

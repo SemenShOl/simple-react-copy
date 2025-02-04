@@ -1,5 +1,6 @@
 export const VDom = {
     createElement(type, config, ...children) {
+        //debugger
         const props = config || {}
         const key = props.key || null
         if (children.length > 1) {
