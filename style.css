@@ -31,3 +31,13 @@
     padding: 5px;
     border-radius: 4px;
 }
+.links {
+    display: flex;
+    gap: 10px;
+}
+.links a {
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    text-decoration: underline;
+}
